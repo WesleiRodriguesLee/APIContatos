@@ -94,5 +94,28 @@ namespace ApiContatos.Controllers
             }
             return Ok(students);
         }
+        [HttpPost]
+        public IHttpActionResult PostNovoContato(ContatoEnderecoDTO contato)
+        {
+            if (!ModelState.IsValid || contato == null)
+                return BadRequest("Dados do contato inválidos");
+            using(var ctx = new AppDbContext())
+            {
+                ctx.Contatos.Add(new Contato()
+                {
+                    Nome = contato.Nome,
+                    Email = contato.Email,
+                    Telefone = contato.Telefone,
+                    Endereco = new Endereco()
+                    {
+                        Local = contato.Local,
+                        Cidade = contato.Cidade,
+                        Estado = contato.Estado
+                    }
+                });
+                ctx.SaveChanges();
+            }
+            return Ok(contato);
+        }
     }
 }
