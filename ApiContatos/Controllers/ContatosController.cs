@@ -1,5 +1,6 @@
 ﻿using ApiContatos.Models;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Web.Http;
 namespace ApiContatos.Controllers
@@ -117,5 +118,42 @@ namespace ApiContatos.Controllers
             }
             return Ok(contato);
         }
+
+        public IHttpActionResult Put(Contato contato)
+        {
+            if (!ModelState.IsValid || contato == null)
+                return BadRequest("Dados do contato inválidos");
+            using (var ctx = new AppDbContext())
+            {
+                var contatoSelecionado = ctx.Contatos.Where(c => c.ContatoId == contato.ContatoId).FirstOrDefault<Contato>();
+            
+                if(contatoSelecionado != null)
+                {
+                    contatoSelecionado.Nome = contato.Nome;
+                    contatoSelecionado.Email = contato.Email;
+                    contatoSelecionado.Telefone = contato.Telefone;
+
+                    ctx.Entry(contatoSelecionado).State = EntityState.Modified;
+
+                    var enderecoSelecionado = ctx.Enderecos.Where(e => e.EnderecoId == contatoSelecionado.Endereco.EnderecoId).FirstOrDefault<Endereco>();
+
+                    if(enderecoSelecionado != null)
+                    {
+                        enderecoSelecionado.Local = contato.Endereco.Local;
+                        enderecoSelecionado.Cidade = contato.Endereco.Cidade;
+                        enderecoSelecionado.Estado = contato.Endereco.Estado;
+
+                        ctx.Entry(enderecoSelecionado).State = EntityState.Modified;
+                    }
+                    ctx.SaveChanges();
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            return Ok($"Contato{contato.Nome} atualizado com sucesso");
+        }
+
     }
 }
