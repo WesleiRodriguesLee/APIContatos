@@ -118,7 +118,7 @@ namespace ApiContatos.Controllers
             }
             return Ok(contato);
         }
-
+        [HttpPut]
         public IHttpActionResult Put(Contato contato)
         {
             if (!ModelState.IsValid || contato == null)
@@ -153,6 +153,36 @@ namespace ApiContatos.Controllers
                 }
             }
             return Ok($"Contato{contato.Nome} atualizado com sucesso");
+        }
+        [HttpDelete]
+
+        public IHttpActionResult Delete(int? id)
+        {
+            if (id == null)
+                return BadRequest("Dados inválidos");
+
+            using(var ctx = new AppDbContext())
+            {
+                var contatoSelecionado = ctx.Contatos.Where(c => c.ContatoId == id).FirstOrDefault<Contato>();
+
+                if(contatoSelecionado != null)
+                {
+                    ctx.Entry(contatoSelecionado).State = EntityState.Deleted;
+
+                    var ederecoSelecionado = ctx.Enderecos.Where(e => e.EnderecoId == contatoSelecionado.EnderecoId).FirstOrDefault<Endereco>();
+
+                    if(ederecoSelecionado != null)
+                    {
+                        ctx.Entry(contatoSelecionado).State = EntityState.Deleted;
+                    }
+                    ctx.SaveChanges();
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            return Ok($"Contato {id} foi deletado com sucesso");
         }
 
     }
